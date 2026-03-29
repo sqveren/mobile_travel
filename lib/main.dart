@@ -118,6 +118,7 @@ class _MainNavigationState extends State<MainNavigation> {
         onSelectPlace: _openPlaceDetails,
       ),
       MapScreen(
+        isActive: _selectedIndex == 2,
         plan: _plan,
         visitedPlaces: _visitedPlaces,
         onSelectPlace: _openPlaceDetails,

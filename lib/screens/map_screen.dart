@@ -9,11 +9,13 @@ import 'map_screen_view.dart';
 class MapScreen extends StatefulWidget {
   const MapScreen({
     super.key,
+    required this.isActive,
     required this.plan,
     required this.visitedPlaces,
     required this.onSelectPlace,
   });
 
+  final bool isActive;
   final List<DayPlan> plan;
   final Set<String> visitedPlaces;
   final ValueChanged<Place> onSelectPlace;
@@ -30,6 +32,7 @@ class _MapScreenState extends State<MapScreen> {
   String? _locationMessage;
   bool _isLocating = false;
   bool _mapReady = false;
+  bool _didRequestInitialLocation = false;
 
   List<Place> get _allPlaces {
     final uniquePlaces = <String, Place>{};
@@ -60,19 +63,33 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _requestLocation();
-    });
+    _scheduleInitialLocationIfNeeded();
   }
 
   @override
   void didUpdateWidget(covariant MapScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!oldWidget.isActive && widget.isActive) {
+      _scheduleInitialLocationIfNeeded();
+    }
     if (oldWidget.plan != widget.plan && _mapReady) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _fitMapToContent();
       });
     }
+  }
+
+  void _scheduleInitialLocationIfNeeded() {
+    if (!widget.isActive || _didRequestInitialLocation) {
+      return;
+    }
+
+    _didRequestInitialLocation = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _requestLocation();
+      }
+    });
   }
 
   Future<void> _requestLocation() async {
@@ -187,6 +204,28 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.move(userLocation, 15);
   }
 
+  void _zoomIn() {
+    if (!_mapReady) {
+      return;
+    }
+
+    _mapController.move(
+      _mapController.camera.center,
+      _mapController.camera.zoom + 1,
+    );
+  }
+
+  void _zoomOut() {
+    if (!_mapReady) {
+      return;
+    }
+
+    _mapController.move(
+      _mapController.camera.center,
+      _mapController.camera.zoom - 1,
+    );
+  }
+
   bool _isVisited(Place place) => widget.visitedPlaces.contains(place.id);
 
   Color _getMarkerColor(Place place) {
@@ -270,6 +309,10 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.isActive) {
+      return const SizedBox.expand();
+    }
+
     return MapScreenView(
       mapController: _mapController,
       allPlaces: _allPlaces,
@@ -289,6 +332,8 @@ class _MapScreenState extends State<MapScreen> {
       onCloseSelectedMarker: _handleCloseSelectedMarker,
       onSelectPlace: widget.onSelectPlace,
       onCenterOnUser: _centerOnUser,
+      onZoomIn: _zoomIn,
+      onZoomOut: _zoomOut,
       onFitRoute: _fitMapToContent,
       onRetryLocation: _requestLocation,
     );

@@ -25,6 +25,8 @@ class MapScreenView extends StatelessWidget {
     required this.onCloseSelectedMarker,
     required this.onSelectPlace,
     required this.onCenterOnUser,
+    required this.onZoomIn,
+    required this.onZoomOut,
     required this.onFitRoute,
     required this.onRetryLocation,
   });
@@ -47,6 +49,8 @@ class MapScreenView extends StatelessWidget {
   final VoidCallback onCloseSelectedMarker;
   final ValueChanged<Place> onSelectPlace;
   final VoidCallback onCenterOnUser;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
   final VoidCallback onFitRoute;
   final VoidCallback onRetryLocation;
 
@@ -141,6 +145,20 @@ class MapScreenView extends StatelessWidget {
             right: 16,
             child: Column(
               children: [
+                FloatingActionButton.small(
+                  heroTag: 'zoom-in',
+                  onPressed: onZoomIn,
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.add, color: Colors.blue),
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton.small(
+                  heroTag: 'zoom-out',
+                  onPressed: onZoomOut,
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.remove, color: Colors.blue),
+                ),
+                const SizedBox(height: 8),
                 FloatingActionButton.small(
                   heroTag: 'fit-route',
                   onPressed: onFitRoute,
