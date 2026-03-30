@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/travel_repository.dart';
+import '../l10n/app_localizations.dart';
 import 'home_screen_view.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -8,6 +9,10 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.onGenerate,
     required this.repository,
+    required this.themeMode,
+    required this.locale,
+    required this.onThemeModeChanged,
+    required this.onLocaleChanged,
   });
 
   final Future<void> Function(
@@ -18,6 +23,10 @@ class HomeScreen extends StatefulWidget {
   )
   onGenerate;
   final TravelRepository repository;
+  final ThemeMode themeMode;
+  final Locale locale;
+  final ValueChanged<ThemeMode> onThemeModeChanged;
+  final ValueChanged<Locale> onLocaleChanged;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -35,10 +44,16 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isGenerating = false;
   String? _loadError;
   String? _generateError;
+  bool _didLoadCities = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didLoadCities) {
+      return;
+    }
+
+    _didLoadCities = true;
     _loadCities();
   }
 
@@ -80,6 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadCities() async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isLoadingCities = true;
       _loadError = null;
@@ -104,14 +120,14 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       setState(() {
-        _loadError =
-            'Could not load cities from PostgreSQL. Check host, port, database, username, and password.';
+        _loadError = l10n.databaseLoadError;
         _isLoadingCities = false;
       });
     }
   }
 
   Future<void> _handleGeneratePressed() async {
+    final l10n = AppLocalizations.of(context);
     final selectedCity = _selectedCity;
     final days = int.tryParse(_daysController.text);
     if (selectedCity == null || days == null || days <= 0) {
@@ -131,8 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       setState(() {
-        _generateError =
-            'Could not generate the plan from PostgreSQL. Check the data types and database connection.';
+        _generateError = l10n.databaseGenerateError;
       });
     } finally {
       if (mounted) {
@@ -155,12 +170,16 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoadingCities: _isLoadingCities,
       isGenerating: _isGenerating,
       loadError: _generateError ?? _loadError,
+      themeMode: widget.themeMode,
+      locale: widget.locale,
       onCityChanged: _handleCityChanged,
       onDaysChanged: _handleDaysChanged,
       onPaceChanged: _handlePaceChanged,
       onTravelTypeChanged: _handleTravelTypeChanged,
       onGeneratePressed: _handleGeneratePressed,
       onRetryLoadCities: _loadCities,
+      onThemeModeChanged: widget.onThemeModeChanged,
+      onLocaleChanged: widget.onLocaleChanged,
     );
   }
 }

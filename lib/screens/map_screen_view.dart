@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/travel_models.dart';
 
 class MapScreenView extends StatelessWidget {
@@ -56,15 +57,19 @@ class MapScreenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       body: Stack(
         children: [
           allPlaces.isEmpty
-              ? const Center(
+              ? Center(
                   child: Padding(
-                    padding: EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Generate a plan first to see real tourist points on the map.',
+                      l10n.mapEmptyState,
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -148,37 +153,43 @@ class MapScreenView extends StatelessWidget {
                 FloatingActionButton.small(
                   heroTag: 'zoom-in',
                   onPressed: onZoomIn,
-                  backgroundColor: Colors.white,
-                  child: const Icon(Icons.add, color: Colors.blue),
+                  backgroundColor: colorScheme.surface,
+                  child: Icon(Icons.add, color: colorScheme.primary),
                 ),
                 const SizedBox(height: 8),
                 FloatingActionButton.small(
                   heroTag: 'zoom-out',
                   onPressed: onZoomOut,
-                  backgroundColor: Colors.white,
-                  child: const Icon(Icons.remove, color: Colors.blue),
+                  backgroundColor: colorScheme.surface,
+                  child: Icon(Icons.remove, color: colorScheme.primary),
                 ),
                 const SizedBox(height: 8),
                 FloatingActionButton.small(
                   heroTag: 'fit-route',
                   onPressed: onFitRoute,
-                  backgroundColor: Colors.white,
-                  child: const Icon(Icons.route, color: Colors.blue),
+                  backgroundColor: colorScheme.surface,
+                  child: Icon(Icons.route, color: colorScheme.primary),
                 ),
                 const SizedBox(height: 8),
                 FloatingActionButton.small(
                   heroTag: 'center-user',
                   onPressed: onCenterOnUser,
-                  backgroundColor: Colors.white,
-                  child: const Icon(Icons.my_location, color: Colors.blue),
+                  backgroundColor: colorScheme.surface,
+                  child: Icon(Icons.my_location, color: colorScheme.primary),
                 ),
               ],
             ),
           ),
-          const Positioned(
+          Positioned(
             bottom: 180,
             left: 16,
-            child: _MapLegend(),
+            child: _MapLegend(
+              highPriorityLabel: l10n.highPriority,
+              mediumPriorityLabel: l10n.mediumPriority,
+              lowPriorityLabel: l10n.lowPriority,
+              visitedLabel: l10n.visitedLegend,
+              lineFromYouLabel: l10n.lineFromYou,
+            ),
           ),
           if (selectedMarker != null)
             _MapPlaceSheet(
@@ -209,10 +220,13 @@ class _MapHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
+        color: colorScheme.surface.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -224,28 +238,28 @@ class _MapHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Live Map',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            l10n.mapTitle,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           Text(
-            '$placeCount real tourist points on the route',
-            style: const TextStyle(color: Colors.black54, fontSize: 12),
+            l10n.routePointsCount(placeCount),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
           ),
           if (isLocating) ...[
             const SizedBox(height: 8),
-            const Row(
+            Row(
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 14,
                   height: 14,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Finding your current location...',
-                    style: TextStyle(fontSize: 12),
+                    l10n.findingLocation,
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
               ],
@@ -260,7 +274,7 @@ class _MapHeader extends StatelessWidget {
             TextButton(
               onPressed: onRetryLocation,
               style: TextButton.styleFrom(padding: EdgeInsets.zero),
-              child: const Text('Try location again'),
+              child: Text(l10n.retryLocation),
             ),
           ],
         ],
@@ -270,27 +284,41 @@ class _MapHeader extends StatelessWidget {
 }
 
 class _MapLegend extends StatelessWidget {
-  const _MapLegend();
+  const _MapLegend({
+    required this.highPriorityLabel,
+    required this.mediumPriorityLabel,
+    required this.lowPriorityLabel,
+    required this.visitedLabel,
+    required this.lineFromYouLabel,
+  });
+
+  final String highPriorityLabel;
+  final String mediumPriorityLabel;
+  final String lowPriorityLabel;
+  final String visitedLabel;
+  final String lineFromYouLabel;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
+        color: colorScheme.surface.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
         ],
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _LegendItem(color: Colors.red, label: 'High priority'),
-          _LegendItem(color: Colors.orange, label: 'Medium priority'),
-          _LegendItem(color: Colors.blue, label: 'Low priority'),
-          _LegendItem(color: Colors.green, label: 'Visited'),
-          _LegendItem(color: Colors.black87, label: 'Line from you'),
+          _LegendItem(color: Colors.red, label: highPriorityLabel),
+          _LegendItem(color: Colors.orange, label: mediumPriorityLabel),
+          _LegendItem(color: Colors.blue, label: lowPriorityLabel),
+          _LegendItem(color: Colors.green, label: visitedLabel),
+          _LegendItem(color: Colors.black87, label: lineFromYouLabel),
         ],
       ),
     );
@@ -305,6 +333,8 @@ class _LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -317,7 +347,11 @@ class _LegendItem extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: colorScheme.onSurface,
+            ),
           ),
         ],
       ),
@@ -342,6 +376,8 @@ class _PlaceMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -350,7 +386,7 @@ class _PlaceMarker extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colorScheme.surface,
               borderRadius: BorderRadius.circular(999),
               boxShadow: [
                 BoxShadow(
@@ -418,9 +454,11 @@ class _UserLocationMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
@@ -458,13 +496,16 @@ class _MapPlaceSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 16, 16, 16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -501,13 +542,13 @@ class _MapPlaceSheet extends StatelessWidget {
               children: [
                 _Badge(
                   text: place.category,
-                  background: Colors.blue.shade50,
-                  foreground: Colors.blue.shade700,
+                  background: colorScheme.primaryContainer,
+                  foreground: colorScheme.onPrimaryContainer,
                 ),
                 _Badge(
-                  text: place.importance.label,
-                  background: Colors.grey.shade100,
-                  foreground: Colors.grey.shade700,
+                  text: l10n.importanceLabel(place.importance),
+                  background: colorScheme.secondaryContainer,
+                  foreground: colorScheme.onSecondaryContainer,
                 ),
                 if (distanceLabel != null)
                   _Badge(
@@ -526,16 +567,14 @@ class _MapPlaceSheet extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               place.description,
-              style: TextStyle(color: Colors.grey.shade700),
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 18),
             ElevatedButton.icon(
               onPressed: onViewDetails,
               icon: const Icon(Icons.info_outline),
-              label: const Text('View Details'),
+              label: Text(l10n.viewDetails),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

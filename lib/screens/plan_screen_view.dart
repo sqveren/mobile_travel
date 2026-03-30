@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/travel_models.dart';
 
 class PlanScreenView extends StatelessWidget {
@@ -36,10 +37,14 @@ class PlanScreenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         toolbarHeight: 140,
         flexibleSpace: SafeArea(
           child: Padding(
@@ -47,20 +52,22 @@ class PlanScreenView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Your Travel Plan',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.yourTravelPlan,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Progress',
-                      style: TextStyle(color: Colors.grey),
+                    Text(
+                      l10n.progress,
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
                     ),
                     Text(
-                      'Visited $visitedCount of $totalPlaces places',
+                      l10n.visitedPlacesSummary(visitedCount, totalPlaces),
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -68,8 +75,8 @@ class PlanScreenView extends StatelessWidget {
                 const SizedBox(height: 8),
                 LinearProgressIndicator(
                   value: progressPercentage,
-                  backgroundColor: Colors.grey.shade200,
-                  color: Colors.blue,
+                  backgroundColor: colorScheme.outlineVariant,
+                  color: colorScheme.primary,
                   borderRadius: BorderRadius.circular(10),
                   minHeight: 8,
                 ),
@@ -81,11 +88,11 @@ class PlanScreenView extends StatelessWidget {
       body: Stack(
         children: [
           plan.isEmpty
-              ? const Center(
+              ? Center(
                   child: Padding(
-                    padding: EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
                     child: Text(
-                      'No plan yet. Go to Generate and create your trip.',
+                      l10n.noPlanYet,
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -118,10 +125,8 @@ class PlanScreenView extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: onOpenMap,
               icon: const Icon(Icons.map_outlined),
-              label: const Text('View on Map'),
+              label: Text(l10n.viewOnMap),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 56),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -160,12 +165,15 @@ class _DayPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         children: [
@@ -180,14 +188,14 @@ class _DayPlanCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: Text(
                         '${dayPlan.day}',
-                        style: const TextStyle(
-                          color: Colors.blue,
+                        style: TextStyle(
+                          color: colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -199,16 +207,19 @@ class _DayPlanCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Day ${dayPlan.day}',
+                          l10n.dayTitle(dayPlan.day),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
                         Text(
-                          '$visitedCount/${dayPlan.places.length} visited',
-                          style: const TextStyle(
-                            color: Colors.grey,
+                          l10n.visitedShort(
+                            visitedCount,
+                            dayPlan.places.length,
+                          ),
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
                             fontSize: 13,
                           ),
                         ),
@@ -217,7 +228,7 @@ class _DayPlanCard extends StatelessWidget {
                   ),
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.grey,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -226,7 +237,7 @@ class _DayPlanCard extends StatelessWidget {
           if (isExpanded)
             Column(
               children: [
-                Divider(height: 1, color: Colors.grey.shade100),
+                Divider(height: 1, color: colorScheme.outlineVariant),
                 ...dayPlan.places.map(
                   (place) => _PlaceItem(
                     place: place,
@@ -265,6 +276,9 @@ class _PlaceItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+
     return InkWell(
       onTap: () => onSelectPlace(place),
       child: Padding(
@@ -278,7 +292,7 @@ class _PlaceItem extends StatelessWidget {
               child: Checkbox(
                 value: isVisited,
                 onChanged: (_) => onToggleVisited(place.id),
-                activeColor: Colors.blue,
+                activeColor: colorScheme.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -309,7 +323,7 @@ class _PlaceItem extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          place.importance.label,
+                          l10n.importanceLabel(place.importance),
                           style: TextStyle(
                             color: importanceColor,
                             fontSize: 10,
@@ -320,8 +334,8 @@ class _PlaceItem extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         place.category,
-                        style: const TextStyle(
-                          color: Colors.grey,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
                           fontSize: 12,
                         ),
                       ),

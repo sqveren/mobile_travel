@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data/postgres_travel_repository.dart';
 import 'data/travel_repository.dart';
+import 'l10n/app_localizations.dart';
 import 'models/travel_models.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_screen.dart';
@@ -10,24 +12,81 @@ import 'screens/plan_screen.dart';
 
 void main() => runApp(const TravelApp());
 
-class TravelApp extends StatelessWidget {
+class TravelApp extends StatefulWidget {
   const TravelApp({super.key});
+
+  @override
+  State<TravelApp> createState() => _TravelAppState();
+}
+
+class _TravelAppState extends State<TravelApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+  Locale _locale = const Locale('uk');
+
+  void _handleThemeModeChanged(ThemeMode value) {
+    setState(() {
+      _themeMode = value;
+    });
+  }
+
+  void _handleLocaleChanged(Locale value) {
+    setState(() {
+      _locale = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      locale: _locale,
+      supportedLocales: const [Locale('en'), Locale('uk')],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      themeMode: _themeMode,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0D6EFD),
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF6F8FC),
         useMaterial3: true,
       ),
-      home: const MainNavigation(),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF65A9FF),
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+      home: MainNavigation(
+        themeMode: _themeMode,
+        locale: _locale,
+        onThemeModeChanged: _handleThemeModeChanged,
+        onLocaleChanged: _handleLocaleChanged,
+      ),
     );
   }
 }
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  const MainNavigation({
+    super.key,
+    required this.themeMode,
+    required this.locale,
+    required this.onThemeModeChanged,
+    required this.onLocaleChanged,
+  });
+
+  final ThemeMode themeMode;
+  final Locale locale;
+  final ValueChanged<ThemeMode> onThemeModeChanged;
+  final ValueChanged<Locale> onLocaleChanged;
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -217,8 +276,16 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screens = <Widget>[
-      HomeScreen(onGenerate: _handleGenerate, repository: _repository),
+      HomeScreen(
+        onGenerate: _handleGenerate,
+        repository: _repository,
+        themeMode: widget.themeMode,
+        locale: widget.locale,
+        onThemeModeChanged: widget.onThemeModeChanged,
+        onLocaleChanged: widget.onLocaleChanged,
+      ),
       PlanScreen(
         plan: _plan,
         visitedPlaces: _visitedPlaces,
@@ -243,13 +310,16 @@ class _MainNavigationState extends State<MainNavigation> {
             _selectedIndex = index;
           });
         },
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.settings), label: 'Generate'),
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.calendar_today),
-            label: 'Plan',
+            icon: const Icon(Icons.settings),
+            label: l10n.navGenerate(),
           ),
-          NavigationDestination(icon: Icon(Icons.map), label: 'Map'),
+          NavigationDestination(
+            icon: const Icon(Icons.calendar_today),
+            label: l10n.navPlan(),
+          ),
+          NavigationDestination(icon: const Icon(Icons.map), label: l10n.navMap()),
         ],
       ),
     );

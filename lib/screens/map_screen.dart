@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/travel_models.dart';
 import 'map_screen_view.dart';
 
@@ -93,6 +94,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _requestLocation() async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isLocating = true;
       _locationMessage = null;
@@ -102,7 +104,7 @@ class _MapScreenState extends State<MapScreen> {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         setState(() {
-          _locationMessage = 'Enable location services to see where to go from your position.';
+          _locationMessage = l10n.enableLocationServices;
           _isLocating = false;
         });
         return;
@@ -115,7 +117,7 @@ class _MapScreenState extends State<MapScreen> {
 
       if (permission == LocationPermission.denied) {
         setState(() {
-          _locationMessage = 'Location permission was denied.';
+          _locationMessage = l10n.locationPermissionDenied;
           _isLocating = false;
         });
         return;
@@ -123,8 +125,7 @@ class _MapScreenState extends State<MapScreen> {
 
       if (permission == LocationPermission.deniedForever) {
         setState(() {
-          _locationMessage =
-              'Location permission is permanently denied. Allow it in system settings.';
+          _locationMessage = l10n.locationPermissionDeniedForever;
           _isLocating = false;
         });
         return;
@@ -144,7 +145,7 @@ class _MapScreenState extends State<MapScreen> {
       _fitMapToContent();
     } catch (_) {
       setState(() {
-        _locationMessage = 'Could not load your current location.';
+        _locationMessage = l10n.locationLoadError;
         _isLocating = false;
       });
     }
@@ -254,6 +255,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   String? get _selectedDistanceLabel {
+    final l10n = AppLocalizations.of(context);
     final userLocation = _userLocation;
     final selectedMarker = _selectedMarker;
     if (userLocation == null || selectedMarker == null) {
@@ -268,10 +270,10 @@ class _MapScreenState extends State<MapScreen> {
     );
 
     if (meters < 1000) {
-      return '${meters.round()} m away';
+      return l10n.metersAway(meters.round());
     }
 
-    return '${(meters / 1000).toStringAsFixed(1)} km away';
+    return l10n.kilometersAway((meters / 1000).toStringAsFixed(1));
   }
 
   String? get _selectedDirectionLabel {
@@ -288,7 +290,7 @@ class _MapScreenState extends State<MapScreen> {
       selectedMarker.lng,
     );
 
-    return _bearingToDirection(bearing);
+    return AppLocalizations.of(context).direction(_bearingToDirection(bearing));
   }
 
   String _bearingToDirection(double bearing) {
