@@ -9,11 +9,15 @@ class HomeScreenView extends StatelessWidget {
     required this.pace,
     required this.travelType,
     required this.isFormValid,
+    required this.isLoadingCities,
+    required this.isGenerating,
+    required this.loadError,
     required this.onCityChanged,
     required this.onDaysChanged,
     required this.onPaceChanged,
     required this.onTravelTypeChanged,
     required this.onGeneratePressed,
+    required this.onRetryLoadCities,
   });
 
   final List<String> cities;
@@ -22,11 +26,15 @@ class HomeScreenView extends StatelessWidget {
   final String pace;
   final String travelType;
   final bool isFormValid;
+  final bool isLoadingCities;
+  final bool isGenerating;
+  final String? loadError;
   final ValueChanged<String?> onCityChanged;
   final ValueChanged<String> onDaysChanged;
   final ValueChanged<String> onPaceChanged;
   final ValueChanged<String> onTravelTypeChanged;
-  final VoidCallback onGeneratePressed;
+  final Future<void> Function() onGeneratePressed;
+  final Future<void> Function() onRetryLoadCities;
 
   @override
   Widget build(BuildContext context) {
@@ -76,20 +84,53 @@ class HomeScreenView extends StatelessWidget {
                   border: Border.all(color: Colors.grey.shade300),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    value: selectedCity,
-                    hint: const Text('Select a city'),
-                    items: cities.map((city) {
-                      return DropdownMenuItem<String>(
-                        value: city,
-                        child: Text(city),
-                      );
-                    }).toList(),
-                    onChanged: onCityChanged,
-                  ),
-                ),
+                child: isLoadingCities
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            SizedBox(width: 12),
+                            Text('Loading cities from database...'),
+                          ],
+                        ),
+                      )
+                    : loadError != null
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              loadError!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: onRetryLoadCities,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: selectedCity,
+                          hint: const Text('Select a city'),
+                          items: cities.map((city) {
+                            return DropdownMenuItem<String>(
+                              value: city,
+                              child: Text(city),
+                            );
+                          }).toList(),
+                          onChanged: onCityChanged,
+                        ),
+                      ),
               ),
             ),
             _HomeScreenCard(
@@ -190,10 +231,19 @@ class HomeScreenView extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: const Text(
-            'Generate Plan',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+          child: isGenerating
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Text(
+                  'Generate Plan',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
         ),
       ),
     );
