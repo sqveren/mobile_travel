@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'bloc/travel_planner_bloc.dart';
 import 'data/postgres_travel_repository.dart';
 import 'data/travel_repository.dart';
 import 'l10n/app_localizations.dart';
@@ -23,12 +25,14 @@ class _TravelAppState extends State<TravelApp> {
   ThemeMode _themeMode = ThemeMode.system;
   Locale _locale = const Locale('uk');
 
+  // Зберігає глобально обрану тему застосунку.
   void _handleThemeModeChanged(ThemeMode value) {
     setState(() {
       _themeMode = value;
     });
   }
 
+  // Зберігає глобально обрану мову застосунку.
   void _handleLocaleChanged(Locale value) {
     setState(() {
       _locale = value;
@@ -94,233 +98,136 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
-  List<DayPlan> _plan = <DayPlan>[];
-  final Set<String> _visitedPlaces = <String>{};
   final TravelRepository _repository = PostgresTravelRepository();
+  // Bloc створюється на рівні основної навігації, щоб його стан
+  // був спільним для HomeScreen, PlanScreen і MapScreen.
+  late final TravelPlannerBloc _travelPlannerBloc = TravelPlannerBloc(
+    repository: _repository,
+  );
 
-  Future<void> _handleGenerate(
-    String city,
-    int days,
-    String pace,
-    String travelType,
-  ) async {
-    final plan = await _generatePlan(city, days, pace, travelType);
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _plan = plan;
-      _visitedPlaces.clear();
-      _selectedIndex = 1;
-    });
-  }
-
-  void _toggleVisited(String id) {
-    setState(() {
-      if (_visitedPlaces.contains(id)) {
-        _visitedPlaces.remove(id);
-      } else {
-        _visitedPlaces.add(id);
-      }
-    });
-  }
-
+  // Переключає вкладку застосунку на екран мапи.
   void _openMap() {
     setState(() {
       _selectedIndex = 2;
     });
   }
 
-  void _openPlaceDetails(Place place) {
+  // Відкриває екран деталей місця і передає туди актуальний visited-стан.
+  void _openPlaceDetails(
+    BuildContext context,
+    Place place,
+    Set<String> visitedPlaces,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PlaceDetailsScreen(
           place: place,
-          isVisited: _visitedPlaces.contains(place.id),
-          onToggleVisited: () => _toggleVisited(place.id),
+          isVisited: visitedPlaces.contains(place.id),
+          onToggleVisited: () {
+            _travelPlannerBloc.add(TravelPlaceVisitedToggled(place.id));
+          },
         ),
       ),
     );
   }
 
-  Future<List<DayPlan>> _generatePlan(
-    String city,
-    int days,
-    String pace,
-    String travelType,
-  ) async {
-    final safeDays = days.clamp(1, 7);
-    final templates = await _repository.fetchPlacesForCity(city);
-    final orderedTemplates = _prioritizePlaces(templates, travelType);
-    final placesPerDay = _placesPerDayForPace(pace);
-
-    if (orderedTemplates.isEmpty) {
-      return <DayPlan>[];
-    }
-
-    return List<DayPlan>.generate(safeDays, (index) {
-      final startIndex = (index * placesPerDay) % orderedTemplates.length;
-      final dayPlaces = List<Place>.generate(placesPerDay, (placeOffset) {
-        final template =
-            orderedTemplates[(startIndex + placeOffset) % orderedTemplates.length];
-        return _copyPlace(template, index, placeOffset);
-      });
-
-      return DayPlan(
-        day: index + 1,
-        places: dayPlaces,
-      );
-    });
-  }
-
-  int _placesPerDayForPace(String pace) {
-    switch (pace) {
-      case 'calm':
-        return 2;
-      case 'active':
-        return 4;
-      case 'standard':
-      default:
-        return 3;
-    }
-  }
-
-  List<Place> _prioritizePlaces(List<Place> places, String travelType) {
-    final categoryPriority = _categoryPriorityForTravelType(travelType);
-    final prioritized = List<Place>.from(places);
-
-    prioritized.sort((a, b) {
-      final importanceCompare =
-          _importanceRank(a.importance).compareTo(_importanceRank(b.importance));
-      if (importanceCompare != 0) {
-        return importanceCompare;
-      }
-
-      final categoryCompare = _categoryRank(
-        a.category,
-        categoryPriority,
-      ).compareTo(_categoryRank(b.category, categoryPriority));
-      if (categoryCompare != 0) {
-        return categoryCompare;
-      }
-
-      return a.name.compareTo(b.name);
-    });
-
-    return prioritized;
-  }
-
-  int _importanceRank(Importance importance) {
-    switch (importance) {
-      case Importance.high:
-        return 0;
-      case Importance.medium:
-        return 1;
-      case Importance.low:
-        return 2;
-    }
-  }
-
-  Map<String, int> _categoryPriorityForTravelType(String travelType) {
-    switch (travelType) {
-      case 'cultural':
-        return <String, int>{
-          'culture': 0,
-          'art': 1,
-          'city walk': 2,
-          'scenic': 3,
-          'nature': 4,
-          'food': 5,
-          'entertainment': 6,
-        };
-      case 'entertainment':
-        return <String, int>{
-          'entertainment': 0,
-          'food': 1,
-          'scenic': 2,
-          'city walk': 3,
-          'art': 4,
-          'nature': 5,
-          'culture': 6,
-        };
-      case 'mixed':
-      default:
-        return <String, int>{
-          'culture': 0,
-          'art': 1,
-          'scenic': 2,
-          'city walk': 3,
-          'entertainment': 4,
-          'nature': 5,
-          'food': 6,
-        };
-    }
-  }
-
-  int _categoryRank(String category, Map<String, int> categoryPriority) {
-    return categoryPriority[category.toLowerCase()] ?? 99;
-  }
-
-  Place _copyPlace(Place place, int dayIndex, int placeIndex) {
-    return Place(
-      id: '${place.id}-${dayIndex + 1}-${placeIndex + 1}',
-      name: place.name,
-      importance: place.importance,
-      category: place.category,
-      description: place.description,
-      lat: place.lat,
-      lng: place.lng,
-    );
+  @override
+  void dispose() {
+    _travelPlannerBloc.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final screens = <Widget>[
-      HomeScreen(
-        onGenerate: _handleGenerate,
-        repository: _repository,
-        themeMode: widget.themeMode,
-        locale: widget.locale,
-        onThemeModeChanged: widget.onThemeModeChanged,
-        onLocaleChanged: widget.onLocaleChanged,
-      ),
-      PlanScreen(
-        plan: _plan,
-        visitedPlaces: _visitedPlaces,
-        onToggleVisited: _toggleVisited,
-        onOpenMap: _openMap,
-        onSelectPlace: _openPlaceDetails,
-      ),
-      MapScreen(
-        isActive: _selectedIndex == 2,
-        plan: _plan,
-        visitedPlaces: _visitedPlaces,
-        onSelectPlace: _openPlaceDetails,
-      ),
-    ];
-
-    return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: screens),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+    return BlocProvider.value(
+      value: _travelPlannerBloc,
+      child: BlocListener<TravelPlannerBloc, TravelPlannerState>(
+        // Після успішної генерації маршруту автоматично переводимо користувача на вкладку плану.
+        listenWhen: (previous, current) => previous.status != current.status,
+        listener: (context, state) {
+          if (state.status == TravelPlannerStatus.success) {
+            setState(() {
+              _selectedIndex = 1;
+            });
+          }
         },
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.settings),
-            label: l10n.navGenerate(),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.calendar_today),
-            label: l10n.navPlan(),
-          ),
-          NavigationDestination(icon: const Icon(Icons.map), label: l10n.navMap()),
-        ],
+        child: BlocBuilder<TravelPlannerBloc, TravelPlannerState>(
+          // Перебудовує основні екрани, коли змінюється стан плану або visited місць.
+          builder: (context, state) {
+            final generateErrorMessage =
+                state.errorType == TravelPlannerErrorType.generatePlan
+                ? AppLocalizations.of(context).databaseGenerateError
+                : null;
+
+            final screens = <Widget>[
+              HomeScreen(
+                onGenerate: (city, days, pace, travelType) {
+                  _travelPlannerBloc.add(
+                    TravelPlanRequested(
+                      city: city,
+                      days: days,
+                      pace: pace,
+                      travelType: travelType,
+                    ),
+                  );
+                },
+                repository: _repository,
+                themeMode: widget.themeMode,
+                locale: widget.locale,
+                onThemeModeChanged: widget.onThemeModeChanged,
+                onLocaleChanged: widget.onLocaleChanged,
+                isGenerating: state.isGenerating,
+                generateErrorMessage: generateErrorMessage,
+              ),
+              PlanScreen(
+                plan: state.plan,
+                visitedPlaces: state.visitedPlaces,
+                onToggleVisited: (id) {
+                  _travelPlannerBloc.add(TravelPlaceVisitedToggled(id));
+                },
+                onOpenMap: _openMap,
+                onSelectPlace: (place) {
+                  _openPlaceDetails(context, place, state.visitedPlaces);
+                },
+              ),
+              MapScreen(
+                isActive: _selectedIndex == 2,
+                plan: state.plan,
+                visitedPlaces: state.visitedPlaces,
+                onSelectPlace: (place) {
+                  _openPlaceDetails(context, place, state.visitedPlaces);
+                },
+              ),
+            ];
+
+            return Scaffold(
+              body: IndexedStack(index: _selectedIndex, children: screens),
+              bottomNavigationBar: NavigationBar(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                destinations: [
+                  NavigationDestination(
+                    icon: const Icon(Icons.settings),
+                    label: l10n.navGenerate(),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.calendar_today),
+                    label: l10n.navPlan(),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.map),
+                    label: l10n.navMap(),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

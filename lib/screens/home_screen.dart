@@ -13,9 +13,11 @@ class HomeScreen extends StatefulWidget {
     required this.locale,
     required this.onThemeModeChanged,
     required this.onLocaleChanged,
+    required this.isGenerating,
+    required this.generateErrorMessage,
   });
 
-  final Future<void> Function(
+  final void Function(
     String city,
     int days,
     String pace,
@@ -27,6 +29,8 @@ class HomeScreen extends StatefulWidget {
   final Locale locale;
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final ValueChanged<Locale> onLocaleChanged;
+  final bool isGenerating;
+  final String? generateErrorMessage;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -41,12 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
   String _travelType = '';
   List<String> _cities = const <String>[];
   bool _isLoadingCities = true;
-  bool _isGenerating = false;
   String? _loadError;
-  String? _generateError;
   bool _didLoadCities = false;
 
   @override
+  // Використовується для одноразового стартового завантаження списку міст з БД.
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_didLoadCities) {
@@ -59,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool get _isFormValid =>
       !_isLoadingCities &&
-      !_isGenerating &&
+      !widget.isGenerating &&
       _selectedCity != null &&
       _daysController.text.isNotEmpty &&
       (int.tryParse(_daysController.text) ?? 0) > 0 &&
@@ -72,28 +75,33 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  // Оновлює вибране місто у формі генерації маршруту.
   void _handleCityChanged(String? city) {
     setState(() {
       _selectedCity = city;
     });
   }
 
+  // Перебудовує форму після зміни кількості днів.
   void _handleDaysChanged(String _) {
     setState(() {});
   }
 
+  // Зберігає вибраний темп подорожі.
   void _handlePaceChanged(String pace) {
     setState(() {
       _pace = pace;
     });
   }
 
+  // Зберігає вибраний тип подорожі.
   void _handleTravelTypeChanged(String travelType) {
     setState(() {
       _travelType = travelType;
     });
   }
 
+  // Завантажує список доступних міст з PostgreSQL для випадаючого списку.
   Future<void> _loadCities() async {
     final l10n = AppLocalizations.of(context);
     setState(() {
@@ -126,36 +134,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Перевіряє форму і відправляє параметри генерації в Bloc.
   Future<void> _handleGeneratePressed() async {
-    final l10n = AppLocalizations.of(context);
     final selectedCity = _selectedCity;
     final days = int.tryParse(_daysController.text);
     if (selectedCity == null || days == null || days <= 0) {
       return;
     }
 
-    setState(() {
-      _isGenerating = true;
-      _generateError = null;
-    });
-
-    try {
-      await widget.onGenerate(selectedCity, days, _pace, _travelType);
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _generateError = l10n.databaseGenerateError;
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
-      }
-    }
+    widget.onGenerate(selectedCity, days, _pace, _travelType);
   }
 
   @override
@@ -168,8 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
       travelType: _travelType,
       isFormValid: _isFormValid,
       isLoadingCities: _isLoadingCities,
-      isGenerating: _isGenerating,
-      loadError: _generateError ?? _loadError,
+      isGenerating: widget.isGenerating,
+      loadError: widget.generateErrorMessage ?? _loadError,
       themeMode: widget.themeMode,
       locale: widget.locale,
       onCityChanged: _handleCityChanged,

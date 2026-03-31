@@ -35,6 +35,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _mapReady = false;
   bool _didRequestInitialLocation = false;
 
+  // Об'єднує всі місця з денних планів у список унікальних точок для мапи.
   List<Place> get _allPlaces {
     final uniquePlaces = <String, Place>{};
     for (final day in widget.plan) {
@@ -51,6 +52,7 @@ class _MapScreenState extends State<MapScreen> {
   List<LatLng> get _routePoints =>
       _allPlaces.map((place) => LatLng(place.lat, place.lng)).toList();
 
+  // Визначає стартовий центр мапи: спочатку користувач, потім перша точка маршруту.
   LatLng get _initialCenter {
     if (_userLocation != null) {
       return _userLocation!;
@@ -80,6 +82,7 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  // Планує початковий запит геолокації тільки тоді, коли вкладка мапи справді активна.
   void _scheduleInitialLocationIfNeeded() {
     if (!widget.isActive || _didRequestInitialLocation) {
       return;
@@ -93,6 +96,7 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
+  // Отримує поточну геолокацію користувача з перевіркою сервісів і дозволів.
   Future<void> _requestLocation() async {
     final l10n = AppLocalizations.of(context);
     setState(() {
@@ -151,11 +155,13 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  // Позначає мапу готовою до роботи і підганяє камеру під маршрут.
   void _handleMapReady() {
     _mapReady = true;
     _fitMapToContent();
   }
 
+  // Масштабує мапу так, щоб у кадрі були всі точки маршруту і позиція користувача.
   void _fitMapToContent() {
     if (!_mapReady) {
       return;
@@ -179,6 +185,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // Вибирає маркер і центрує мапу на відповідному місці.
   void _handleMarkerTap(Place place) {
     setState(() {
       _selectedMarker = place;
@@ -189,12 +196,14 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  // Закриває нижню картку з інформацією про вибране місце.
   void _handleCloseSelectedMarker() {
     setState(() {
       _selectedMarker = null;
     });
   }
 
+  // Переміщує камеру до користувача або повторно запитує геолокацію.
   void _centerOnUser() {
     final userLocation = _userLocation;
     if (userLocation == null) {
@@ -205,6 +214,7 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.move(userLocation, 15);
   }
 
+  // Збільшує масштаб мапи.
   void _zoomIn() {
     if (!_mapReady) {
       return;
@@ -216,6 +226,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // Зменшує масштаб мапи.
   void _zoomOut() {
     if (!_mapReady) {
       return;
@@ -227,8 +238,10 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // Перевіряє, чи місце вже відмічено як відвідане.
   bool _isVisited(Place place) => widget.visitedPlaces.contains(place.id);
 
+  // Повертає колір маркера залежно від visited-стану і пріоритету місця.
   Color _getMarkerColor(Place place) {
     if (_isVisited(place)) {
       return Colors.green;
@@ -244,6 +257,7 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  // Будує допоміжну лінію між користувачем і вибраною точкою на мапі.
   List<LatLng> get _selectedConnection {
     final userLocation = _userLocation;
     final selectedMarker = _selectedMarker;
@@ -254,6 +268,7 @@ class _MapScreenState extends State<MapScreen> {
     return <LatLng>[userLocation, LatLng(selectedMarker.lat, selectedMarker.lng)];
   }
 
+  // Розраховує текстову відстань від користувача до вибраного місця.
   String? get _selectedDistanceLabel {
     final l10n = AppLocalizations.of(context);
     final userLocation = _userLocation;
@@ -276,6 +291,7 @@ class _MapScreenState extends State<MapScreen> {
     return l10n.kilometersAway((meters / 1000).toStringAsFixed(1));
   }
 
+  // Розраховує текстовий напрямок до вибраного місця.
   String? get _selectedDirectionLabel {
     final userLocation = _userLocation;
     final selectedMarker = _selectedMarker;
@@ -293,6 +309,7 @@ class _MapScreenState extends State<MapScreen> {
     return AppLocalizations.of(context).direction(_bearingToDirection(bearing));
   }
 
+  // Перетворює азимут у зрозумілий напрямок типу north / south-west.
   String _bearingToDirection(double bearing) {
     const directions = <String>[
       'north',
