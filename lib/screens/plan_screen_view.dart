@@ -91,10 +91,7 @@ class PlanScreenView extends StatelessWidget {
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(
-                      l10n.noPlanYet,
-                      textAlign: TextAlign.center,
-                    ),
+                    child: Text(l10n.noPlanYet, textAlign: TextAlign.center),
                   ),
                 )
               : ListView.builder(
@@ -243,8 +240,9 @@ class _DayPlanCard extends StatelessWidget {
                     place: place,
                     isVisited: isVisited(place),
                     importanceColor: getImportanceColor(place.importance),
-                    importanceBackground:
-                        getImportanceBackground(place.importance),
+                    importanceBackground: getImportanceBackground(
+                      place.importance,
+                    ),
                     onToggleVisited: onToggleVisited,
                     onSelectPlace: onSelectPlace,
                   ),

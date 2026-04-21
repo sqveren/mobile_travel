@@ -273,7 +273,10 @@ class HomeScreenView extends StatelessWidget {
                 )
               : Text(
                   l10n.generatePlan,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
         ),
       ),
@@ -459,7 +462,9 @@ class _SelectableOptionButton extends StatelessWidget {
               : colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
+            color: isSelected
+                ? colorScheme.primary
+                : colorScheme.outlineVariant,
             width: 2,
           ),
         ),

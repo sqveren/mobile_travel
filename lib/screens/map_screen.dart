@@ -265,7 +265,10 @@ class _MapScreenState extends State<MapScreen> {
       return const <LatLng>[];
     }
 
-    return <LatLng>[userLocation, LatLng(selectedMarker.lat, selectedMarker.lng)];
+    return <LatLng>[
+      userLocation,
+      LatLng(selectedMarker.lat, selectedMarker.lng),
+    ];
   }
 
   // Розраховує текстову відстань від користувача до вибраного місця.

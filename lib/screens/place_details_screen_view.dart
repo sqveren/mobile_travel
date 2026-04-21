@@ -122,9 +122,7 @@ class PlaceDetailsScreenView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        isVisited
-                            ? l10n.placeVisited
-                            : l10n.placeNotVisited,
+                        isVisited ? l10n.placeVisited : l10n.placeNotVisited,
                         style: TextStyle(
                           fontSize: 14,
                           color: colorScheme.onSurfaceVariant,
@@ -153,7 +151,9 @@ class PlaceDetailsScreenView extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: colorScheme.surface,
-                border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
+                border: Border(
+                  top: BorderSide(color: colorScheme.outlineVariant),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -198,11 +198,7 @@ class PlaceDetailsScreenView extends StatelessWidget {
 }
 
 class _Tag extends StatelessWidget {
-  const _Tag({
-    required this.text,
-    required this.icon,
-    required this.colors,
-  });
+  const _Tag({required this.text, required this.icon, required this.colors});
 
   final String text;
   final IconData icon;
@@ -286,7 +282,10 @@ class _CoordRow extends StatelessWidget {
       children: [
         SizedBox(
           width: 100,
-          child: Text(label, style: TextStyle(color: colorScheme.onSurfaceVariant)),
+          child: Text(
+            label,
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
+          ),
         ),
         Text(
           value,

@@ -17,12 +17,7 @@ class HomeScreen extends StatefulWidget {
     required this.generateErrorMessage,
   });
 
-  final void Function(
-    String city,
-    int days,
-    String pace,
-    String travelType,
-  )
+  final void Function(String city, int days, String pace, String travelType)
   onGenerate;
   final TravelRepository repository;
   final ThemeMode themeMode;

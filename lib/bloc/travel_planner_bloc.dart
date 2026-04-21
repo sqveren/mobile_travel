@@ -62,8 +62,7 @@ class TravelPlannerState {
   }
 }
 
-class TravelPlannerBloc
-    extends Bloc<TravelPlannerEvent, TravelPlannerState> {
+class TravelPlannerBloc extends Bloc<TravelPlannerEvent, TravelPlannerState> {
   // Bloc централізує бізнес-логіку планувальника:
   // генерацію маршруту, обробку помилок і список visited місць.
   TravelPlannerBloc({required TravelRepository repository})
@@ -81,12 +80,7 @@ class TravelPlannerBloc
     TravelPlanRequested event,
     Emitter<TravelPlannerState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        status: TravelPlannerStatus.loading,
-        clearError: true,
-      ),
-    );
+    emit(state.copyWith(status: TravelPlannerStatus.loading, clearError: true));
 
     try {
       final plan = await _generatePlan(
@@ -113,7 +107,7 @@ class TravelPlannerBloc
     }
   }
 
-  // Перемикає статус visited для конкретного місця без повторної генерації плану.
+  // Перемикає статус visited для конкретного місця
   void _onTravelPlaceVisitedToggled(
     TravelPlaceVisitedToggled event,
     Emitter<TravelPlannerState> emit,
@@ -125,12 +119,7 @@ class TravelPlannerBloc
       updatedVisitedPlaces.add(event.placeId);
     }
 
-    emit(
-      state.copyWith(
-        visitedPlaces: updatedVisitedPlaces,
-        clearError: true,
-      ),
-    );
+    emit(state.copyWith(visitedPlaces: updatedVisitedPlaces, clearError: true));
   }
 
   // Основний алгоритм побудови плану:
@@ -154,7 +143,8 @@ class TravelPlannerBloc
       final startIndex = (index * placesPerDay) % orderedTemplates.length;
       final dayPlaces = List<Place>.generate(placesPerDay, (placeOffset) {
         final template =
-            orderedTemplates[(startIndex + placeOffset) % orderedTemplates.length];
+            orderedTemplates[(startIndex + placeOffset) %
+                orderedTemplates.length];
         return _copyPlace(template, index, placeOffset);
       });
 
@@ -182,8 +172,9 @@ class TravelPlannerBloc
     final prioritized = List<Place>.from(places);
 
     prioritized.sort((a, b) {
-      final importanceCompare =
-          _importanceRank(a.importance).compareTo(_importanceRank(b.importance));
+      final importanceCompare = _importanceRank(
+        a.importance,
+      ).compareTo(_importanceRank(b.importance));
       if (importanceCompare != 0) {
         return importanceCompare;
       }

@@ -15,15 +15,31 @@ import 'screens/plan_screen.dart';
 void main() => runApp(const TravelApp());
 
 class TravelApp extends StatefulWidget {
-  const TravelApp({super.key});
+  const TravelApp({
+    super.key,
+    this.repository,
+    this.initialThemeMode = ThemeMode.system,
+    this.initialLocale = const Locale('uk'),
+  });
+
+  final TravelRepository? repository;
+  final ThemeMode initialThemeMode;
+  final Locale initialLocale;
 
   @override
   State<TravelApp> createState() => _TravelAppState();
 }
 
 class _TravelAppState extends State<TravelApp> {
-  ThemeMode _themeMode = ThemeMode.system;
-  Locale _locale = const Locale('uk');
+  late ThemeMode _themeMode;
+  late Locale _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeMode = widget.initialThemeMode;
+    _locale = widget.initialLocale;
+  }
 
   // Зберігає глобально обрану тему застосунку.
   void _handleThemeModeChanged(ThemeMode value) {
@@ -69,6 +85,7 @@ class _TravelAppState extends State<TravelApp> {
       ),
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       home: MainNavigation(
+        repository: widget.repository ?? PostgresTravelRepository(),
         themeMode: _themeMode,
         locale: _locale,
         onThemeModeChanged: _handleThemeModeChanged,
@@ -81,12 +98,14 @@ class _TravelAppState extends State<TravelApp> {
 class MainNavigation extends StatefulWidget {
   const MainNavigation({
     super.key,
+    required this.repository,
     required this.themeMode,
     required this.locale,
     required this.onThemeModeChanged,
     required this.onLocaleChanged,
   });
 
+  final TravelRepository repository;
   final ThemeMode themeMode;
   final Locale locale;
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -98,11 +117,10 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
-  final TravelRepository _repository = PostgresTravelRepository();
   // Bloc створюється на рівні основної навігації, щоб його стан
   // був спільним для HomeScreen, PlanScreen і MapScreen.
   late final TravelPlannerBloc _travelPlannerBloc = TravelPlannerBloc(
-    repository: _repository,
+    repository: widget.repository,
   );
 
   // Переключає вкладку застосунку на екран мапи.
@@ -113,18 +131,19 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   // Відкриває екран деталей місця і передає туди актуальний visited-стан.
-  void _openPlaceDetails(
-    BuildContext context,
-    Place place,
-    Set<String> visitedPlaces,
-  ) {
+  void _openPlaceDetails(BuildContext context, Place place) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => PlaceDetailsScreen(
-          place: place,
-          isVisited: visitedPlaces.contains(place.id),
-          onToggleVisited: () {
-            _travelPlannerBloc.add(TravelPlaceVisitedToggled(place.id));
+        builder: (_) => BlocBuilder<TravelPlannerBloc, TravelPlannerState>(
+          bloc: _travelPlannerBloc,
+          builder: (context, state) {
+            return PlaceDetailsScreen(
+              place: place,
+              isVisited: state.visitedPlaces.contains(place.id),
+              onToggleVisited: () {
+                _travelPlannerBloc.add(TravelPlaceVisitedToggled(place.id));
+              },
+            );
           },
         ),
       ),
@@ -172,7 +191,7 @@ class _MainNavigationState extends State<MainNavigation> {
                     ),
                   );
                 },
-                repository: _repository,
+                repository: widget.repository,
                 themeMode: widget.themeMode,
                 locale: widget.locale,
                 onThemeModeChanged: widget.onThemeModeChanged,
@@ -188,7 +207,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 },
                 onOpenMap: _openMap,
                 onSelectPlace: (place) {
-                  _openPlaceDetails(context, place, state.visitedPlaces);
+                  _openPlaceDetails(context, place);
                 },
               ),
               MapScreen(
@@ -196,7 +215,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 plan: state.plan,
                 visitedPlaces: state.visitedPlaces,
                 onSelectPlace: (place) {
-                  _openPlaceDetails(context, place, state.visitedPlaces);
+                  _openPlaceDetails(context, place);
                 },
               ),
             ];

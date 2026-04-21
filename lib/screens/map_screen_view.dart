@@ -403,10 +403,7 @@ class _PlaceMarker extends StatelessWidget {
               place.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
             ),
           ),
           Transform.translate(

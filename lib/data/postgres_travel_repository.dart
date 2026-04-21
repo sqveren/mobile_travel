@@ -26,9 +26,7 @@ class PostgresTravelRepository implements TravelRepository {
         Sql.named('SELECT full_name FROM cities ORDER BY full_name'),
       );
 
-      return result
-          .map((row) => row[0] as String)
-          .toList(growable: false);
+      return result.map((row) => row[0] as String).toList(growable: false);
     } finally {
       await connection.close();
     }

@@ -36,8 +36,7 @@ class AppLocalizations {
   String get themeDark => isUk ? 'Темна' : 'Dark';
   String get close => isUk ? 'Закрити' : 'Close';
   String get save => isUk ? 'Зберегти' : 'Save';
-  String get destinationCity =>
-      isUk ? 'Місто призначення' : 'Destination City';
+  String get destinationCity => isUk ? 'Місто призначення' : 'Destination City';
   String get loadingCities => isUk
       ? 'Завантаження міст із бази даних...'
       : 'Loading cities from database...';
@@ -50,16 +49,14 @@ class AppLocalizations {
   String get paceCalm => isUk ? 'Спокійний' : 'Calm';
   String get paceStandard => isUk ? 'Стандартний' : 'Standard';
   String get paceActive => isUk ? 'Активний' : 'Active';
-  String get paceCalmSubtitle =>
-      isUk ? '2 місця на день' : '2 places per day';
+  String get paceCalmSubtitle => isUk ? '2 місця на день' : '2 places per day';
   String get paceStandardSubtitle =>
       isUk ? '3 місця на день' : '3 places per day';
   String get paceActiveSubtitle =>
       isUk ? '4 місця на день' : '4 places per day';
   String get travelType => isUk ? 'Тип подорожі' : 'Travel Type';
   String get travelTypeCultural => isUk ? 'Культурна' : 'Cultural';
-  String get travelTypeEntertainment =>
-      isUk ? 'Розважальна' : 'Entertainment';
+  String get travelTypeEntertainment => isUk ? 'Розважальна' : 'Entertainment';
   String get travelTypeMixed => isUk ? 'Змішана' : 'Mixed';
   String get generatePlan => isUk ? 'Створити план' : 'Generate Plan';
   String get databaseLoadError => isUk
@@ -68,8 +65,7 @@ class AppLocalizations {
   String get databaseGenerateError => isUk
       ? 'Не вдалося згенерувати план із PostgreSQL. Перевір типи даних і підключення до бази.'
       : 'Could not generate the plan from PostgreSQL. Check the data types and database connection.';
-  String get yourTravelPlan =>
-      isUk ? 'Твій план подорожі' : 'Your Travel Plan';
+  String get yourTravelPlan => isUk ? 'Твій план подорожі' : 'Your Travel Plan';
   String get progress => isUk ? 'Прогрес' : 'Progress';
   String visitedPlacesSummary(int visited, int total) => isUk
       ? 'Відвідано $visited із $total місць'
@@ -87,9 +83,8 @@ class AppLocalizations {
   String get latitude => isUk ? 'Широта' : 'Latitude';
   String get longitude => isUk ? 'Довгота' : 'Longitude';
   String get visitStatus => isUk ? 'Статус відвідування' : 'Visit Status';
-  String get placeVisited => isUk
-      ? 'Ти вже відвідав це місце'
-      : 'You have visited this place';
+  String get placeVisited =>
+      isUk ? 'Ти вже відвідав це місце' : 'You have visited this place';
   String get placeNotVisited => isUk ? 'Ще не відвідано' : 'Not visited yet';
   String get backToPlan => isUk ? 'Повернутись до плану' : 'Back to Plan';
   String get visited => isUk ? 'Відвідано' : 'Visited';
@@ -127,8 +122,7 @@ class AppLocalizations {
   String get viewDetails => isUk ? 'Детальніше' : 'View Details';
   String metersAway(int meters) =>
       isUk ? '$meters м від тебе' : '$meters m away';
-  String kilometersAway(String km) =>
-      isUk ? '$km км від тебе' : '$km km away';
+  String kilometersAway(String km) => isUk ? '$km км від тебе' : '$km km away';
   String navGenerate() => isUk ? 'Створити' : 'Generate';
   String navPlan() => isUk ? 'План' : 'Plan';
   String navMap() => isUk ? 'Мапа' : 'Map';
